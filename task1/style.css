@@ -78,6 +78,7 @@ html {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
 }
 
 body {
@@ -1147,9 +1148,12 @@ ul {
    ========================================================================== */
 
 .services-section {
-  background-color: #ffffff;
-  padding: 80px 0 44px;
+  background-color: var(--color-surface-subtle, #f8fafc);
+  padding: 100px 0 90px;
   width: 100%;
+  border-top: 1px solid var(--color-border, #e2e8f0);
+  border-bottom: 1px solid var(--color-border, #e2e8f0);
+  position: relative;
 }
 
 .services-container {
@@ -1388,6 +1392,9 @@ ul {
 .about-section {
   width: 100%;
   background-color: #ffffff;
+  margin-top: 48px;
+  padding-top: 48px;
+  border-top: 1px solid var(--color-border, #e2e8f0);
   scroll-margin-top: calc(var(--header-height) + 16px);
 }
 
@@ -2182,13 +2189,57 @@ ul {
   max-width: 900px;
 }
 
-/* Capabilities Box */
 .specs-capabilities-box {
   background-color: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: var(--radius-lg);
   padding: 32px 36px;
   margin-bottom: 40px;
+}
+
+.specs-capabilities-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 36px;
+}
+
+.specs-capabilities-text {
+  flex: 1;
+}
+
+.specs-capabilities-media {
+  flex-shrink: 0;
+  width: 320px;
+  max-width: 100%;
+}
+
+.specs-showcase-img {
+  width: 100%;
+  height: 240px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 16px rgba(10, 25, 47, 0.08);
+  display: block;
+  transition: transform var(--transition-normal);
+}
+
+.specs-showcase-img:hover {
+  transform: scale(1.02);
+}
+
+@media (max-width: 900px) {
+  .specs-capabilities-content {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+  .specs-capabilities-media {
+    width: 100%;
+  }
+  .specs-showcase-img {
+    height: 200px;
+  }
 }
 
 .capabilities-heading {
@@ -4542,11 +4593,11 @@ a.contact-card-value:hover {
    ========================================================================== */
 
 .why-fabcon-section {
-  padding: 88px 0 96px;
+  padding: 104px 0 108px;
   background-color: #ffffff;
   position: relative;
   overflow: hidden;
-  border-top: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--color-border, #e2e8f0);
 }
 
 .why-fabcon-container {
@@ -4924,9 +4975,10 @@ a.contact-card-value:hover {
    ========================================================================== */
 
 .industries-section {
-  padding: 88px 0 96px;
-  background-color: #f8fafc;
-  border-top: 1px solid #e2e8f0;
+  padding: 104px 0 108px;
+  background-color: #f1f5f9;
+  border-top: 1px solid var(--color-border, #e2e8f0);
+  border-bottom: 1px solid var(--color-border, #e2e8f0);
   position: relative;
   scroll-margin-top: 90px;
 }
