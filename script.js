@@ -418,6 +418,230 @@ document.addEventListener('DOMContentLoaded', () => {
     startAutoPlay();
   }
 
+  // --- Our Services Carousel Controller (Modern Native Smooth-Scroll Engine) ---
+  const initServicesCarousel = () => {
+    const carouselWrapper = document.getElementById('servicesCarousel');
+    const viewport = document.getElementById('servicesViewport');
+    const track = document.getElementById('servicesTrack');
+    const prevBtn = document.getElementById('servicesPrevBtn');
+    const nextBtn = document.getElementById('servicesNextBtn');
+    const pagination = document.getElementById('servicesPagination');
+
+    if (!carouselWrapper || !viewport || !track || !prevBtn || !nextBtn) return;
+
+    const cards = Array.from(track.querySelectorAll('.service-carousel-card'));
+    const totalCards = cards.length;
+    if (totalCards === 0) return;
+
+    let autoPlayTimer = null;
+    let isPaused = false;
+
+    // 1. Dynamic visible cards count
+    const getCardsPerView = () => {
+      const width = window.innerWidth;
+      if (width >= 1024) return 3;
+      if (width >= 640) return 2;
+      return 1;
+    };
+
+    // 2. Computed gap from track
+    const getGap = () => {
+      const style = window.getComputedStyle(track);
+      const gapVal = parseFloat(style.gap) || parseFloat(style.columnGap);
+      if (!isNaN(gapVal)) return gapVal;
+      const width = window.innerWidth;
+      if (width >= 1024) return 28;
+      if (width >= 640) return 20;
+      return 16;
+    };
+
+    // 3. Set exact card widths so N cards fit per view
+    const updateCardSizes = () => {
+      const visible = getCardsPerView();
+      const gap = getGap();
+      const viewportWidth = viewport.clientWidth;
+      if (viewportWidth <= 0) return;
+
+      const cardWidth = Math.floor((viewportWidth - (gap * (visible - 1))) / visible);
+      cards.forEach(card => {
+        card.style.flex = `0 0 ${cardWidth}px`;
+        card.style.width = `${cardWidth}px`;
+      });
+    };
+
+    // 4. Calculate scroll step (1 card width + gap)
+    const getScrollStep = () => {
+      if (cards.length === 0) return 300;
+      return cards[0].offsetWidth + getGap();
+    };
+
+    // 5. Update pagination dots and navigation button states based on scroll position
+    const updateControls = () => {
+      const scrollLeft = viewport.scrollLeft;
+      const maxScroll = viewport.scrollWidth - viewport.clientWidth;
+      
+      const isAtStart = scrollLeft <= 5;
+      const isAtEnd = scrollLeft >= maxScroll - 5;
+
+      prevBtn.disabled = isAtStart;
+      prevBtn.setAttribute('aria-disabled', isAtStart ? 'true' : 'false');
+
+      nextBtn.disabled = isAtEnd;
+      nextBtn.setAttribute('aria-disabled', isAtEnd ? 'true' : 'false');
+
+      if (pagination) {
+        const step = getScrollStep();
+        const activeIdx = Math.min(totalCards - 1, Math.round(scrollLeft / step));
+        const dots = pagination.querySelectorAll('.services-dot');
+        dots.forEach((dot, idx) => {
+          if (idx === activeIdx) {
+            dot.classList.add('is-active');
+            dot.setAttribute('aria-selected', 'true');
+          } else {
+            dot.classList.remove('is-active');
+            dot.setAttribute('aria-selected', 'false');
+          }
+        });
+      }
+    };
+
+    // 6. Build pagination dots
+    const renderPagination = () => {
+      if (!pagination) return;
+      pagination.innerHTML = '';
+      const visible = getCardsPerView();
+      const dotCount = Math.max(1, totalCards - visible + 1);
+
+      for (let i = 0; i < dotCount; i++) {
+        const dot = document.createElement('button');
+        dot.type = 'button';
+        dot.className = `services-dot ${i === 0 ? 'is-active' : ''}`;
+        dot.setAttribute('role', 'tab');
+        dot.setAttribute('aria-label', `Go to service slide ${i + 1}`);
+        dot.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
+        dot.addEventListener('click', () => {
+          const step = getScrollStep();
+          viewport.scrollTo({
+            left: i * step,
+            behavior: 'smooth'
+          });
+        });
+        pagination.appendChild(dot);
+      }
+    };
+
+    // 7. Scroll action helpers
+    const scrollNext = () => {
+      const maxScroll = viewport.scrollWidth - viewport.clientWidth;
+      const step = getScrollStep();
+      if (viewport.scrollLeft >= maxScroll - 10) {
+        // Loop back to start
+        viewport.scrollTo({ left: 0, behavior: 'smooth' });
+      } else {
+        viewport.scrollBy({ left: step, behavior: 'smooth' });
+      }
+    };
+
+    const scrollPrev = () => {
+      const step = getScrollStep();
+      if (viewport.scrollLeft > 0) {
+        viewport.scrollBy({ left: -step, behavior: 'smooth' });
+      }
+    };
+
+    // Button event listeners
+    nextBtn.addEventListener('click', () => {
+      scrollNext();
+    });
+
+    prevBtn.addEventListener('click', () => {
+      scrollPrev();
+    });
+
+    // Keyboard support
+    carouselWrapper.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') scrollNext();
+      if (e.key === 'ArrowLeft') scrollPrev();
+    });
+
+    // Listen to scroll events to update buttons & dots in real time
+    let scrollDebounce = null;
+    viewport.addEventListener('scroll', () => {
+      clearTimeout(scrollDebounce);
+      scrollDebounce = setTimeout(updateControls, 40);
+    }, { passive: true });
+
+    // 8. Autoplay (every 4 seconds)
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const startAutoPlay = () => {
+      if (prefersReducedMotion || isPaused) return;
+      stopAutoPlay();
+      autoPlayTimer = setInterval(() => {
+        scrollNext();
+      }, 4000);
+    };
+
+    const stopAutoPlay = () => {
+      if (autoPlayTimer) {
+        clearInterval(autoPlayTimer);
+        autoPlayTimer = null;
+      }
+    };
+
+    // Pause on hover
+    carouselWrapper.addEventListener('mouseenter', () => {
+      isPaused = true;
+      stopAutoPlay();
+    });
+
+    carouselWrapper.addEventListener('mouseleave', () => {
+      isPaused = false;
+      startAutoPlay();
+    });
+
+    // Pause on focus
+    carouselWrapper.addEventListener('focusin', () => {
+      isPaused = true;
+      stopAutoPlay();
+    });
+
+    carouselWrapper.addEventListener('focusout', () => {
+      isPaused = false;
+      startAutoPlay();
+    });
+
+    // Pause on manual touch scroll
+    viewport.addEventListener('touchstart', () => {
+      isPaused = true;
+      stopAutoPlay();
+    }, { passive: true });
+
+    viewport.addEventListener('touchend', () => {
+      isPaused = false;
+      startAutoPlay();
+    }, { passive: true });
+
+    // 9. Resize recalculations
+    let resizeTimer = null;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        updateCardSizes();
+        renderPagination();
+        updateControls();
+      }, 100);
+    });
+
+    // Initial setup
+    updateCardSizes();
+    renderPagination();
+    updateControls();
+    startAutoPlay();
+  };
+
+  initServicesCarousel();
+
   // --- Industries Navigation Handler ---
   const scrollToIndustries = () => {
     const industriesSection = document.getElementById('industries');
